@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DriveMatch — Mobilna aplikacija</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg-elev: #14141c;
+    --bg-card: #1a1a25;
+    --bg-card-hover: #21212e;
+    --border: #26263a;
+    --text: #f5f5fa;
+    --text-dim: #9a9ab0;
+    --text-mute: #5e5e75;
+    --accent: #ff6b35;
+    --accent-2: #ffaa5c;
+    --accent-glow: rgba(255, 107, 53, 0.4);
+    --success: #4ade80;
+    --info: #60a5fa;
+    --gradient: linear-gradient(135deg, #ff6b35 0%, #ff9558 100%);
+    --gradient-soft: linear-gradient(135deg, rgba(255,107,53,0.15) 0%, rgba(255,149,88,0.05) 100%);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: radial-gradient(ellipse at top, #1a1a2e 0%, #0a0a0f 60%);
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+    color: var(--text);
+    padding: 40px 20px;
+  }
+
+  .page-title {
+    text-align: center;
+    max-width: 1400px;
+    margin: 0 auto 50px;
+  }
+  .page-title h1 {
+    font-size: 32px;
+    font-weight: 700;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .page-title p { color: var(--text-dim); font-size: 15px; }
+
+  .screens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    justify-content: center;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  /* Phone frame */
+  .phone {
+    width: 380px;
+    height: 780px;
+    background: #000;
+    border-radius: 44px;
+    padding: 12px;
+    box-shadow:
+      0 0 0 2px #2a2a3e,
+      0 30px 80px rgba(0,0,0,0.6),
+      0 0 60px rgba(255,107,53,0.08);
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .phone-label {
+    position: absolute;
+    bottom: -30px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: var(--text-mute);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  .screen {
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    border-radius: 34px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status bar */
+  .status-bar {
+    height: 44px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+  .status-icons svg { width: 16px; height: 16px; }
+
+  /* Notch */
+  .notch {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 110px;
+    height: 28px;
+    background: #000;
+    border-radius: 18px;
+    z-index: 10;
+  }
+
+  /* Content */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 20px 20px;
+  }
+  .content::-webkit-scrollbar { display: none; }
+
+  /* Common */
+  .h-back {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-top: 8px;
+  }
+  .back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+  }
+  .back-btn svg { width: 18px; height: 18px; stroke: var(--text); }
+
+  .title-lg { font-size: 28px; font-weight: 700; line-height: 1.2; margin-bottom: 6px; }
+  .title-md { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: var(--text-dim); margin-bottom: 24px; line-height: 1.5; }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--gradient);
+    color: #fff;
+    border: none;
+    padding: 18px;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 8px 24px var(--accent-glow);
+    transition: transform 0.15s;
+  }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary svg { width: 18px; height: 18px; }
+
+  .btn-ghost {
+    width: 100%;
+    background: transparent;
+    color: var(--text-dim);
+    border: none;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 12px;
+    cursor: pointer;
+  }
+
+  /* ===== SCREEN 1 — Welcome ===== */
+  .welcome {
+    height: 100%;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(255,107,53,0.25) 0%, transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(96,165,250,0.15) 0%, transparent 40%),
+      var(--bg);
+    display: flex;
+    flex-direction: column;
+    padding: 60px 28px 32px;
+  }
+  .logo-block {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .logo-circle {
+    width: 100px;
+    height: 100px;
+    background: var(--gradient);
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 28px;
+    box-shadow: 0 20px 50px var(--accent-glow);
+    transform: rotate(-8deg);
+  }
+  .logo-circle svg { width: 56px; height: 56px; fill: #fff; }
+
+  .welcome h1 {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+  .welcome h1 span {
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .welcome p {
+    color: var(--text-dim);
+    font-size: 16px;
+    line-height: 1.5;
+    max-width: 280px;
+  }
+
+  .feature-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 28px 0;
+  }
+  .pill {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+  /* ===== SCREEN 2 — Preferences (Brand) ===== */
+  .progress {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--bg-card);
+  }
+  .progress-bar.active { background: var(--gradient); }
+
+  .step-label {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .brand-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .brand-card {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 8px;
+    text-align: center;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .brand-card.selected {
+    border-color: var(--accent);
+    background: var(--gradient-soft);
+    box-shadow: 0 4px 16px rgba(255,107,53,0.2);
+  }
+  .brand-logo {
+    width: 36px;
+    height: 36px;
+    margin: 0 auto 8px;
+    background: var(--bg-elev);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .brand-card.selected .brand-logo {
+    background: var(--gradient);
+    color: #fff;
+  }
+  .brand-name { font-size: 12px; font-weight: 500; color: var(--text); }
+
+  .bottom-bar {
+    padding: 16px 20px 24px;
+    background: linear-gradient(to top, var(--bg) 60%, transparent);
+    flex-shrink: 0;
+  }
+
+  /* ===== SCREEN 3 — Body type & Fuel ===== */
+  .section-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin: 20px 0 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .section-title .hint { font-size: 12px; color: var(--text-mute); font-weight: 500; }
+
+  .body-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .body-card {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .body-card.selected {
+    border-color: var(--accent);
+    background: var(--gradient-soft);
+  }
+  .body-icon {
+    width: 48px;
+    height: 32px;
+    color: var(--text-dim);
+  }
+  .body-card.selected .body-icon { color: var(--accent); }
+  .body-card .name { font-size: 14px; font-weight: 600; }
+  .body-card .count { font-size: 11px; color: var(--text-mute); }
+
+  .fuel-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .fuel-chip {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+  }
+  .fuel-chip.selected {
+    border-color: var(--accent);
+    background: var(--gradient-soft);
+    color: var(--accent-2);
+  }
+  .fuel-chip svg { width: 16px; height: 16px; }
+
+  /* ===== SCREEN 4 — Price slider ===== */
+  .price-display {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    text-align: center;
+    margin: 20px 0;
+  }
+  .price-range-text {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .price-value {
+    font-size: 28px;
+    font-weight: 700;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .price-sub { font-size: 12px; color: var(--text-mute); margin-top: 4px; }
+
+  .slider-wrap {
+    margin: 24px 8px 12px;
+    position: relative;
+    height: 30px;
+  }
+  .slider-track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    height: 6px;
+    background: var(--bg-card);
+    border-radius: 3px;
+  }
+  .slider-fill {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 15%;
+    right: 25%;
+    height: 6px;
+    background: var(--gradient);
+    border-radius: 3px;
+  }
+  .slider-thumb {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 4px var(--accent);
+  }
+  .slider-thumb.left { left: 15%; }
+  .slider-thumb.right { left: 75%; }
+
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-mute);
+  }
+
+  .year-section {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 16px;
+    border: 1px solid var(--border);
+  }
+  .year-section .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .year-section .label { font-size: 14px; font-weight: 600; }
+  .year-section .value { font-size: 14px; color: var(--accent-2); font-weight: 600; }
+
+  .year-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .year-chip {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+  .year-chip.selected {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .transmission-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .trans-btn {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    padding: 14px;
+    border-radius: 14px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+  .trans-btn.selected {
+    border-color: var(--accent);
+    background: var(--gradient-soft);
+    color: var(--text);
+  }
+
+  /* ===== SCREEN 5 — Results ===== */
+  .search-bar {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .search-bar svg { width: 16px; height: 16px; color: var(--text-mute); }
+  .search-bar input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 14px;
+    flex: 1;
+    font-family: inherit;
+  }
+  .search-bar input::placeholder { color: var(--text-mute); }
+  .search-bar .filter-btn {
+    width: 28px;
+    height: 28px;
+    background: var(--gradient);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .search-bar .filter-btn svg { width: 14px; height: 14px; color: #fff; }
+
+  .filter-tags {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .filter-tags::-webkit-scrollbar { display: none; }
+  .filter-tag {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 11px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .filter-tag .x { color: var(--text-mute); cursor: pointer; }
+  .filter-tag.accent {
+    background: var(--gradient-soft);
+    border-color: var(--accent);
+    color: var(--accent-2);
+  }
+
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .results-count { font-size: 14px; font-weight: 600; }
+  .results-count span { color: var(--accent); }
+  .sort-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sort-btn svg { width: 12px; height: 12px; }
+
+  .car-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 14px;
+    position: relative;
+  }
+  .car-card .match-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--gradient);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .car-card .heart-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+  .car-card .heart-btn svg { width: 16px; height: 16px; color: #fff; }
+  .car-card .heart-btn.active svg { color: var(--accent); fill: var(--accent); }
+
+  .car-image {
+    height: 140px;
+    background:
+      radial-gradient(ellipse at center bottom, rgba(255,107,53,0.2), transparent 70%),
+      linear-gradient(180deg, #1f1f2e 0%, #2a2a3e 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .car-image svg { width: 80%; height: 80%; }
+  .car-image::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    right: 10%;
+    height: 16px;
+    background: radial-gradient(ellipse, rgba(0,0,0,0.5), transparent 70%);
+    filter: blur(4px);
+  }
+
+  .car-body {
+    padding: 14px 16px 16px;
+  }
+  .car-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .car-name { font-size: 16px; font-weight: 700; }
+  .car-brand { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .car-price { font-size: 17px; font-weight: 700; color: var(--accent-2); }
+  .car-price-sub { font-size: 10px; color: var(--text-mute); display: block; text-align: right; }
+
+  .car-specs {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .spec {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .spec svg { width: 13px; height: 13px; }
+
+  /* ===== SCREEN 6 — Detail ===== */
+  .detail-header-img {
+    height: 280px;
+    background:
+      radial-gradient(ellipse at center, rgba(255,107,53,0.25), transparent 60%),
+      linear-gradient(180deg, #1f1f2e 0%, #14141c 100%);
+    margin: -8px -20px 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .detail-header-img svg { width: 90%; }
+  .detail-top-bar {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 2;
+  }
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .icon-btn svg { width: 18px; height: 18px; color: #fff; }
+
+  .img-dots {
+    position: absolute;
+    bottom: 16px;
+    left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+  }
+  .dot-i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+  }
+  .dot-i.active { background: var(--accent); width: 20px; border-radius: 3px; }
+
+  .detail-body {
+    padding: 20px 4px;
+  }
+  .detail-name-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+  }
+  .detail-name { font-size: 24px; font-weight: 700; }
+  .detail-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 12px; }
+  .rating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-card);
+    padding: 6px 10px;
+    border-radius: 10px;
+  }
+  .rating svg { width: 14px; height: 14px; color: var(--accent); }
+  .rating-val { font-size: 13px; font-weight: 600; }
+
+  .detail-price-card {
+    background: var(--gradient-soft);
+    border: 1px solid var(--accent);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .detail-price-card .label { font-size: 11px; color: var(--text-dim); }
+  .detail-price-card .price { font-size: 24px; font-weight: 700; color: var(--accent-2); }
+  .detail-price-card .badge {
+    background: var(--gradient);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .spec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .spec-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .spec-box-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--gradient-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .spec-box-icon svg { width: 18px; height: 18px; color: var(--accent); }
+  .spec-box .label { font-size: 10px; color: var(--text-mute); }
+  .spec-box .value { font-size: 13px; font-weight: 600; }
+
+  .section-h { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+  .features-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 80px; }
+  .feature-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+  }
+  .feature-check {
+    width: 24px;
+    height: 24px;
+    background: rgba(74,222,128,0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .feature-check svg { width: 12px; height: 12px; color: var(--success); }
+  .feature-text { font-size: 13px; color: var(--text-dim); }
+
+  .detail-cta {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 16px 20px 24px;
+    background: linear-gradient(to top, var(--bg) 70%, transparent);
+    display: flex;
+    gap: 10px;
+  }
+  .detail-cta .btn-secondary {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .detail-cta .btn-secondary svg { width: 22px; height: 22px; color: var(--accent); }
+  .detail-cta .btn-primary { padding: 18px; }
+
+  /* Home indicator */
+  .home-indicator {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 130px;
+    height: 4px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 2px;
+  }
+
+  /* ===== Name input screen ===== */
+  .name-screen {
+    height: 100%;
+    background:
+      radial-gradient(circle at 80% 10%, rgba(255,107,53,0.18) 0%, transparent 45%),
+      radial-gradient(circle at 20% 90%, rgba(96,165,250,0.12) 0%, transparent 45%),
+      var(--bg);
+    display: flex;
+    flex-direction: column;
+    padding: 0 28px 28px;
+  }
+
+  .name-illustration {
+    margin: 24px auto 8px;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: var(--gradient-soft);
+    border: 1.5px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .name-illustration::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px dashed rgba(255,107,53,0.35);
+  }
+  .name-illustration svg { width: 56px; height: 56px; color: var(--accent); }
+
+  .input-group {
+    margin-top: 28px;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 4px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+  }
+  .input-group.focused {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(255,107,53,0.12);
+  }
+  .input-group .field-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--accent);
+  }
+  .input-field-wrap { flex: 1; padding: 12px 0; }
+  .input-label {
+    font-size: 11px;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+  }
+  .input-field {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 17px;
+    font-weight: 600;
+    font-family: inherit;
+    margin-top: 2px;
+    caret-color: var(--accent);
+  }
+  .input-field::placeholder { color: var(--text-mute); font-weight: 500; }
+
+  .input-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 22px;
+    background: var(--accent);
+    vertical-align: middle;
+    margin-left: 2px;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .input-hint {
+    font-size: 12px;
+    color: var(--text-mute);
+    margin-top: 12px;
+    padding-left: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .input-hint svg { width: 13px; height: 13px; color: var(--info); }
+
+  @media (max-width: 820px) {
+    body { padding: 20px 8px; }
+    .phone { width: 100%; max-width: 380px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <h1>DriveMatch</h1>
+  <p>Mobilna aplikacija za personalizovanu preporuku automobila</p>
+</div>
+
+<div class="screens">
+
+  <!-- ============ SCREEN 1: WELCOME ============ -->
+  <div class="phone">
+    <div class="screen">
+      <div class="notch"></div>
+      <div class="welcome">
+        <div class="status-bar">
+          <span>9:41</span>
+          <div class="status-icons">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h20V2L2 22z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+          </div>
+        </div>
+
+        <div class="logo-block">
+          <div class="logo-circle">
+            <svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+          </div>
+          <h1>Drive<span>Match</span></h1>
+          <p>Pronađi savršen auto za sebe — brzo, pametno i bez kompromisa</p>
+
+          <div class="feature-pills">
+            <div class="pill"><span class="dot"></span>AI preporuke</div>
+            <div class="pill"><span class="dot"></span>10.000+ modela</div>
+            <div class="pill"><span class="dot"></span>Realne cene</div>
+          </div>
+        </div>
+
+        <button class="btn-primary">
+          Započni
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+        <button class="btn-ghost">Već imam nalog · Prijavi se</button>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+    <div class="phone-label">1 · Dobrodošli</div>
+  </div>
+
+  <!-- ============ SCREEN 2: NAME INPUT ============ -->
+  <div class="phone">
+    <div class="screen">
+      <div class="notch"></div>
+      <div class="name-screen">
+        <div class="status-bar" style="padding:0">
+          <span>9:41</span>
+          <div class="status-icons">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h20V2L2 22z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+          </div>
+        </div>
+
+        <div class="h-back" style="margin-top:12px">
+          <div class="back-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="name-illustration">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+
+        <div style="text-align:center;margin-top:14px">
+          <div class="title-lg" style="font-size:26px">Pre nego što počnemo...</div>
+          <div class="subtitle" style="margin-top:8px">Kako da te zovemo? Personalizovaćemo iskustvo za tebe.</div>
+        </div>
+
+        <div class="input-group focused">
+          <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <div class="input-field-wrap">
+            <div class="input-label">Tvoje ime</div>
+            <div style="display:flex;align-items:center">
+              <span style="font-size:17px;font-weight:600;color:var(--text)">Natasa</span>
+              <span class="input-cursor"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Tvoje ime koristimo samo u aplikaciji
+        </div>
+
+        <div style="flex:1"></div>
+
+        <button class="btn-primary">
+          Nastavi
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+    <div class="phone-label">2 · Unos imena</div>
+  </div>
+
+  <!-- ============ SCREEN 3: BRAND PREFERENCES ============ -->
+  <div class="phone">
+    <div class="screen">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h20V2L2 22z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+        </div>
+      </div>
+      <div class="content">
+        <div class="h-back">
+          <div class="back-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="progress">
+          <div class="progress-bar active"></div>
+          <div class="progress-bar"></div>
+          <div class="progress-bar"></div>
+          <div class="progress-bar"></div>
+        </div>
+
+        <div class="step-label">Korak 1 od 4</div>
+        <div class="title-lg">Koji brendovi te <br>najviše interesuju?</div>
+        <div class="subtitle">Izaberi jedan ili više brendova. Možeš preskočiti ovaj korak.</div>
+
+        <div class="brand-grid">
+          <div class="brand-card selected"><div class="brand-logo">BMW</div><div class="brand-name">BMW</div></div>
+          <div class="brand-card selected"><div class="brand-logo">A</div><div class="brand-name">Audi</div></div>
+          <div class="brand-card"><div class="brand-logo">MB</div><div class="brand-name">Mercedes</div></div>
+          <div class="brand-card selected"><div class="brand-logo">VW</div><div class="brand-name">Volkswagen</div></div>
+          <div class="brand-card"><div class="brand-logo">T</div><div class="brand-name">Toyota</div></div>
+          <div class="brand-card"><div class="brand-logo">H</div><div class="brand-name">Hyundai</div></div>
+          <div class="brand-card"><div class="brand-logo">Š</div><div class="brand-name">Škoda</div></div>
+          <div class="brand-card"><div class="brand-logo">P</div><div class="brand-name">Peugeot</div></div>
+          <div class="brand-card"><div class="brand-logo">K</div><div class="brand-name">Kia</div></div>
+          <div class="brand-card"><div class="brand-logo">M</div><div class="brand-name">Mazda</div></div>
+          <div class="brand-card"><div class="brand-logo">F</div><div class="brand-name">Ford</div></div>
+          <div class="brand-card"><div class="brand-logo">V</div><div class="brand-name">Volvo</div></div>
+        </div>
+      </div>
+
+      <div class="bottom-bar">
+        <button class="btn-primary">
+          Dalje (3 izabrano)
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+    <div class="phone-label">3 · Brendovi</div>
+  </div>
+
+  <!-- ============ SCREEN 3: BODY TYPE & FUEL ============ -->
+  <div class="phone">
+    <div class="screen">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h20V2L2 22z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="h-back">
+          <div class="back-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="progress">
+          <div class="progress-bar active"></div>
+          <div class="progress-bar active"></div>
+          <div class="progress-bar"></div>
+          <div class="progress-bar"></div>
+        </div>
+
+        <div class="step-label">Korak 2 od 4</div>
+        <div class="title-lg">Karoserija i gorivo</div>
+        <div class="subtitle">Reci nam kakav stil vožnje voliš.</div>
+
+        <div class="section-title">Tip karoserije <span class="hint">višestruki izbor</span></div>
+        <div class="body-grid">
+          <div class="body-card selected">
+            <svg class="body-icon" viewBox="0 0 64 32" fill="currentColor"><path d="M4 22 L8 14 Q10 10 14 10 L20 10 Q22 6 26 6 L38 6 Q42 6 44 10 L50 10 Q54 10 56 14 L60 22 L60 26 L4 26 Z M14 26 Q14 30 18 30 Q22 30 22 26 Z M42 26 Q42 30 46 30 Q50 30 50 26 Z"/></svg>
+            <div class="name">Sedan</div>
+            <div class="count">2.341 oglasa</div>
+          </div>
+          <div class="body-card selected">
+            <svg class="body-icon" viewBox="0 0 64 32" fill="currentColor"><path d="M4 24 L4 12 Q4 8 8 8 L18 8 Q20 4 24 4 L40 4 Q44 4 46 8 L56 8 Q60 8 60 12 L60 24 L4 24 Z M14 24 Q14 28 18 28 Q22 28 22 24 Z M42 24 Q42 28 46 28 Q50 28 50 24 Z"/></svg>
+            <div class="name">SUV</div>
+            <div class="count">3.812 oglasa</div>
+          </div>
+          <div class="body-card">
+            <svg class="body-icon" viewBox="0 0 64 32" fill="currentColor"><path d="M6 22 L8 14 Q10 10 14 10 L22 10 Q24 6 30 6 L42 6 Q46 6 48 10 L52 10 Q58 12 58 18 L58 26 L6 26 Z M14 26 Q14 30 18 30 Q22 30 22 26 Z M42 26 Q42 30 46 30 Q50 30 50 26 Z"/></svg>
+            <div class="name">Hečbek</div>
+            <div class="count">1.998 oglasa</div>
+          </div>
+          <div class="body-card">
+            <svg class="body-icon" viewBox="0 0 64 32" fill="currentColor"><path d="M2 24 L2 14 Q2 10 6 10 L20 10 Q22 6 28 6 L40 6 Q44 6 46 10 L58 10 Q62 10 62 14 L62 24 L2 24 Z M14 24 Q14 28 18 28 Q22 28 22 24 Z M42 24 Q42 28 46 28 Q50 28 50 24 Z"/></svg>
+            <div class="name">Karavan</div>
+            <div class="count">1.124 oglasa</div>
+          </div>
+          <div class="body-card">
+            <svg class="body-icon" viewBox="0 0 64 32" fill="currentColor"><path d="M4 24 L8 18 Q10 12 18 10 L26 8 Q34 6 42 8 L50 12 Q56 16 60 22 L60 26 L4 26 Z M14 26 Q14 30 18 30 Q22 30 22 26 Z M42 26 Q42 30 46 30 Q50 30 50 26 Z"/></svg>
+            <div class="name">Kupe</div>
+            <div class="count">512 oglasa</div>
+          </div>
+          <div class="body-card">
+            <svg class="body-icon" viewBox="0 0 64 32" fill="currentColor"><path d="M4 24 L4 16 Q4 12 8 12 L18 12 Q22 8 30 8 L36 8 L36 22 L4 22 Z M40 22 L40 8 Q44 8 50 12 L56 12 Q60 12 60 16 L60 24 L4 24 Z M14 24 Q14 28 18 28 Q22 28 22 24 Z M42 24 Q42 28 46 28 Q50 28 50 24 Z"/></svg>
+            <div class="name">Pickup</div>
+            <div class="count">287 oglasa</div>
+          </div>
+        </div>
+
+        <div class="section-title">Tip goriva</div>
+        <div class="fuel-row">
+          <div class="fuel-chip selected">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 22h12V4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v18zM15 9h2a2 2 0 0 1 2 2v6a2 2 0 0 0 4 0V8l-3-3"/></svg>
+            Benzin
+          </div>
+          <div class="fuel-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            Dizel
+          </div>
+          <div class="fuel-chip selected">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Hibrid
+          </div>
+          <div class="fuel-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="7" width="12" height="14" rx="2"/><path d="M9 7V4h6v3"/><line x1="12" y1="11" x2="12" y2="17"/></svg>
+            Električni
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-bar">
+        <button class="btn-primary">
+          Nastavi
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+    <div class="phone-label">4 · Karoserija i gorivo</div>
+  </div>
+
+  <!-- ============ SCREEN 4: PRICE & EXTRAS ============ -->
+  <div class="phone">
+    <div class="screen">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h20V2L2 22z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="h-back">
+          <div class="back-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="progress">
+          <div class="progress-bar active"></div>
+          <div class="progress-bar active"></div>
+          <div class="progress-bar active"></div>
+          <div class="progress-bar"></div>
+        </div>
+
+        <div class="step-label">Korak 3 od 4</div>
+        <div class="title-lg">Budžet i detalji</div>
+        <div class="subtitle">Podesi opseg cene koji ti odgovara.</div>
+
+        <div class="price-display">
+          <div class="price-range-text">Cenovni rang</div>
+          <div class="price-value">€ 12.000 — € 28.000</div>
+          <div class="price-sub">≈ približno 1.402 — 3.275 € mesečno*</div>
+        </div>
+
+        <div class="slider-wrap">
+          <div class="slider-track"></div>
+          <div class="slider-fill"></div>
+          <div class="slider-thumb left"></div>
+          <div class="slider-thumb right"></div>
+        </div>
+        <div class="slider-labels">
+          <span>€ 0</span>
+          <span>€ 100.000+</span>
+        </div>
+
+        <div class="year-section">
+          <div class="label-row">
+            <span class="label">Godište</span>
+            <span class="value">2020 — 2026</span>
+          </div>
+          <div class="year-chips">
+            <div class="year-chip">2018+</div>
+            <div class="year-chip">2019+</div>
+            <div class="year-chip selected">2020+</div>
+            <div class="year-chip">2022+</div>
+            <div class="year-chip">2024+</div>
+          </div>
+        </div>
+
+        <div class="section-title">Menjač</div>
+        <div class="transmission-row">
+          <div class="trans-btn selected">Automatik</div>
+          <div class="trans-btn">Manuelni</div>
+          <div class="trans-btn">Svejedno</div>
+        </div>
+      </div>
+
+      <div class="bottom-bar">
+        <button class="btn-primary">
+          Pronađi auto za mene
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </button>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+    <div class="phone-label">5 · Budžet i detalji</div>
+  </div>
+
+  <!-- ============ SCREEN 5: RESULTS ============ -->
+  <div class="phone">
+    <div class="screen">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h20V2L2 22z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+        </div>
+      </div>
+
+      <div class="content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-top: 6px;">
+          <div>
+            <div style="font-size:12px;color:var(--text-mute)">Zdravo, Natasa</div>
+            <div style="font-size:20px;font-weight:700;margin-top:2px">Tvoje preporuke</div>
+          </div>
+          <div class="back-btn" style="border-radius:50%">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">N</div>
+          </div>
+        </div>
+
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input placeholder="Pretraži model..." value="">
+          <div class="filter-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          </div>
+        </div>
+
+        <div class="filter-tags">
+          <div class="filter-tag accent">BMW, Audi, VW <span class="x">×</span></div>
+          <div class="filter-tag accent">SUV, Sedan <span class="x">×</span></div>
+          <div class="filter-tag accent">Hibrid <span class="x">×</span></div>
+          <div class="filter-tag accent">€12—28k <span class="x">×</span></div>
+        </div>
+
+        <div class="results-header">
+          <div class="results-count"><span>24</span> rezultata</div>
+          <div class="sort-btn">
+            Sortiraj
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+
+        <!-- Car 1 -->
+        <div class="car-card">
+          <div class="match-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            96% match
+          </div>
+          <div class="heart-btn active">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <div class="car-image">
+            <svg viewBox="0 0 200 100" fill="none">
+              <ellipse cx="100" cy="92" rx="80" ry="4" fill="rgba(0,0,0,0.4)"/>
+              <path d="M20 70 L30 50 Q35 40 50 38 L75 35 Q90 28 110 28 L140 32 Q160 38 175 50 L185 65 L185 75 Q185 78 182 78 L20 78 Q17 78 17 75 L17 72 Z" fill="#ff6b35" stroke="#ff8855" stroke-width="0.5"/>
+              <path d="M48 50 Q55 40 70 38 L100 36 L125 40 L140 48 L130 50 Q100 52 60 52 Z" fill="rgba(255,255,255,0.15)"/>
+              <circle cx="55" cy="78" r="11" fill="#1a1a25"/>
+              <circle cx="55" cy="78" r="6" fill="#3a3a4e"/>
+              <circle cx="150" cy="78" r="11" fill="#1a1a25"/>
+              <circle cx="150" cy="78" r="6" fill="#3a3a4e"/>
+              <rect x="170" y="55" width="14" height="6" rx="2" fill="#ffeb70"/>
+            </svg>
+          </div>
+          <div class="car-body">
+            <div class="car-title-row">
+              <div>
+                <div class="car-name">BMW X3 xDrive30e</div>
+                <div class="car-brand">BMW · 2022 · 45.000 km</div>
+              </div>
+              <div>
+                <div class="car-price">€ 26.900</div>
+                <span class="car-price-sub">ili 312€/mes</span>
+              </div>
+            </div>
+            <div class="car-specs">
+              <div class="spec">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Hibrid
+              </div>
+              <div class="spec">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6"/><path d="M10 20H4v-6"/><path d="M20 4L4 20"/></svg>
+                Automatik
+              </div>
+              <div class="spec">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                252 KS
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Car 2 -->
+        <div class="car-card">
+          <div class="match-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            91% match
+          </div>
+          <div class="heart-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <div class="car-image">
+            <svg viewBox="0 0 200 100" fill="none">
+              <ellipse cx="100" cy="92" rx="80" ry="4" fill="rgba(0,0,0,0.4)"/>
+              <path d="M15 72 L28 56 Q32 48 50 45 L80 40 Q100 32 122 32 L145 36 Q165 42 180 58 L188 70 L188 78 Q188 80 185 80 L15 80 Q12 80 12 78 L12 74 Z" fill="#60a5fa" stroke="#7fb6fc" stroke-width="0.5"/>
+              <path d="M45 56 Q52 48 70 44 L100 42 L130 46 L150 56 L135 56 Q100 58 55 58 Z" fill="rgba(255,255,255,0.12)"/>
+              <circle cx="55" cy="80" r="11" fill="#1a1a25"/>
+              <circle cx="55" cy="80" r="6" fill="#3a3a4e"/>
+              <circle cx="150" cy="80" r="11" fill="#1a1a25"/>
+              <circle cx="150" cy="80" r="6" fill="#3a3a4e"/>
+              <rect x="172" y="60" width="13" height="5" rx="2" fill="#ffeb70"/>
+            </svg>
+          </div>
+          <div class="car-body">
+            <div class="car-title-row">
+              <div>
+                <div class="car-name">Audi Q5 40 TFSI</div>
+                <div class="car-brand">Audi · 2021 · 62.000 km</div>
+              </div>
+              <div>
+                <div class="car-price">€ 24.500</div>
+                <span class="car-price-sub">ili 285€/mes</span>
+              </div>
+            </div>
+            <div class="car-specs">
+              <div class="spec">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 22h12V4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v18z"/></svg>
+                Benzin
+              </div>
+              <div class="spec">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6"/><path d="M10 20H4v-6"/></svg>
+                Automatik
+              </div>
+              <div class="spec">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+                204 KS
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Car 3 -->
+        <div class="car-card">
+          <div class="match-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            87% match
+          </div>
+          <div class="heart-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <div class="car-image">
+            <svg viewBox="0 0 200 100" fill="none">
+              <ellipse cx="100" cy="92" rx="80" ry="4" fill="rgba(0,0,0,0.4)"/>
+              <path d="M20 72 L32 54 Q38 46 55 44 L82 40 Q100 34 122 34 L142 38 Q160 44 175 56 L185 68 L185 76 Q185 79 182 79 L18 79 Q15 79 15 76 L15 74 Z" fill="#a78bfa" stroke="#c4b5fd" stroke-width="0.5"/>
+              <path d="M50 54 Q58 46 72 42 L100 40 L128 44 L148 54 L132 54 Q100 56 60 56 Z" fill="rgba(255,255,255,0.12)"/>
+              <circle cx="58" cy="79" r="11" fill="#1a1a25"/>
+              <circle cx="58" cy="79" r="6" fill="#3a3a4e"/>
+              <circle cx="148" cy="79" r="11" fill="#1a1a25"/>
+              <circle cx="148" cy="79" r="6" fill="#3a3a4e"/>
+            </svg>
+          </div>
+          <div class="car-body">
+            <div class="car-title-row">
+              <div>
+                <div class="car-name">VW Tiguan eHybrid</div>
+                <div class="car-brand">Volkswagen · 2023 · 28.000 km</div>
+              </div>
+              <div>
+                <div class="car-price">€ 27.800</div>
+                <span class="car-price-sub">ili 323€/mes</span>
+              </div>
+            </div>
+            <div class="car-specs">
+              <div class="spec">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Hibrid
+              </div>
+              <div class="spec">DSG</div>
+              <div class="spec">245 KS</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+    <div class="phone-label">6 · Rezultati (kartice)</div>
+  </div>
+
+  <!-- ============ SCREEN 6: CAR DETAIL ============ -->
+  <div class="phone">
+    <div class="screen">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h20V2L2 22z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+        </div>
+      </div>
+
+      <div class="content" style="padding-bottom: 100px">
+        <div class="detail-header-img">
+          <div class="detail-top-bar">
+            <div class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
+            <div style="display:flex;gap:8px">
+              <div class="icon-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              </div>
+              <div class="icon-btn" style="background:rgba(255,107,53,0.2);border-color:var(--accent)">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="color:#ff6b35"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <svg viewBox="0 0 300 160" fill="none">
+            <ellipse cx="150" cy="148" rx="115" ry="6" fill="rgba(0,0,0,0.5)"/>
+            <path d="M20 100 L40 70 Q48 56 70 52 L110 46 Q140 36 175 38 L215 44 Q245 52 268 72 L285 96 L285 118 Q285 122 281 122 L19 122 Q15 122 15 118 L15 110 Z" fill="#ff6b35" stroke="#ff9558" stroke-width="1"/>
+            <path d="M65 70 Q75 56 95 50 L150 48 L195 52 L225 70 L210 70 Q150 74 80 74 Z" fill="rgba(255,255,255,0.18)"/>
+            <path d="M70 75 L120 75 L130 100 L70 100 Z" fill="rgba(0,0,0,0.2)"/>
+            <path d="M170 75 L220 75 L220 100 L160 100 Z" fill="rgba(0,0,0,0.2)"/>
+            <circle cx="80" cy="122" r="17" fill="#0a0a0f"/>
+            <circle cx="80" cy="122" r="13" fill="#1a1a25"/>
+            <circle cx="80" cy="122" r="7" fill="#3a3a4e"/>
+            <circle cx="220" cy="122" r="17" fill="#0a0a0f"/>
+            <circle cx="220" cy="122" r="13" fill="#1a1a25"/>
+            <circle cx="220" cy="122" r="7" fill="#3a3a4e"/>
+            <rect x="260" y="82" width="22" height="9" rx="3" fill="#ffeb70"/>
+            <rect x="18" y="82" width="22" height="9" rx="3" fill="#fff" opacity="0.9"/>
+          </svg>
+
+          <div class="img-dots">
+            <div class="dot-i active"></div>
+            <div class="dot-i"></div>
+            <div class="dot-i"></div>
+            <div class="dot-i"></div>
+          </div>
+        </div>
+
+        <div class="detail-body">
+          <div class="detail-name-row">
+            <div>
+              <div class="detail-name">BMW X3 xDrive30e</div>
+              <div class="detail-sub">2022 · 45.000 km · Beograd</div>
+            </div>
+            <div class="rating">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span class="rating-val">4.8</span>
+            </div>
+          </div>
+
+          <div class="detail-price-card">
+            <div>
+              <div class="label">Cena</div>
+              <div class="price">€ 26.900</div>
+            </div>
+            <div class="badge">96% MATCH</div>
+          </div>
+
+          <div class="section-h">Specifikacije</div>
+          <div class="spec-grid">
+            <div class="spec-box">
+              <div class="spec-box-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
+              <div>
+                <div class="label">Gorivo</div>
+                <div class="value">Hibrid</div>
+              </div>
+            </div>
+            <div class="spec-box">
+              <div class="spec-box-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              </div>
+              <div>
+                <div class="label">Snaga</div>
+                <div class="value">252 KS</div>
+              </div>
+            </div>
+            <div class="spec-box">
+              <div class="spec-box-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6"/><path d="M10 20H4v-6"/><line x1="20" y1="4" x2="14" y2="10"/><line x1="4" y1="20" x2="10" y2="14"/></svg>
+              </div>
+              <div>
+                <div class="label">Menjač</div>
+                <div class="value">Automatik</div>
+              </div>
+            </div>
+            <div class="spec-box">
+              <div class="spec-box-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </div>
+              <div>
+                <div class="label">Potrošnja</div>
+                <div class="value">2.1 l/100</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-h">Oprema</div>
+          <div class="features-list">
+            <div class="feature-row">
+              <div class="feature-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="feature-text">Panoramski krov i kožna sedišta</div>
+            </div>
+            <div class="feature-row">
+              <div class="feature-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="feature-text">Adaptivni tempomat i parking asistent</div>
+            </div>
+            <div class="feature-row">
+              <div class="feature-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="feature-text">Apple CarPlay i Android Auto</div>
+            </div>
+            <div class="feature-row">
+              <div class="feature-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="feature-text">LED Matrix farovi i Harman Kardon audio</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-cta">
+        <div class="btn-secondary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <button class="btn-primary">
+          Zakaži test vožnju
+        </button>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+    <div class="phone-label">7 · Detalji vozila</div>
+  </div>
+
+</div>
+
+<div style="text-align:center;color:var(--text-mute);font-size:12px;margin-top:60px;padding-bottom:20px">
+  DriveMatch · Mobilna aplikacija za preporuku automobila · Dark Theme
+</div>
+
+</body>
+</html>
